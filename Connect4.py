@@ -1,53 +1,53 @@
 class Game:
-    DEFAULT_WIDTH = 7
-    DEFAULT_HEIGHT = 6
-
-    def __init__(self, width=0, height=0):
+    def __init__(self, width=7, height=6):
         if width < 0 or height <0:
             raise Exception("That is not a valid size!")
-        self.width = Game.DEFAULT_WIDTH if width==0 else width
-        self.height = Game.DEFAULT_HEIGHT if height==0 else height
-        self.player = 1
-        self.board = [[0 for _ in range(self.width)] for _ in range(self.height)]
-        self.availableSpots = [self.height-1 for _ in range(self.width)]
-        self.round = 1
-        self.max_rounds = width*height
+        self.width = width
+        self.height = height
+        self.reset_game()
+        self.max_rounds = width*height + 1
 
     def print_board(self):
         for i in range(self.height):
             print(self.board[i])
 
+    #returns 0 if the game continues, returns 1 if player 1 won, returns 2 if player 2 won, returns 3 if the game is a tie
     def place_chip(self, col):
         row = self.availableSpots[col]
         if row == -1:
-            raise Exception("The board is already filled in that column!")
-        self.availableSpots[col] -= 1       #move up the location that the next chip will be placed
+            return 0
+        self.availableSpots[col] -= 1   #move up the location that the next chip will be placed
         self.board[row][col] = self.player
         self.round += 1
+
+        # see if there is a winner
         if self.check_winner(row, col):
-            print(self.player, " has won the game!")
-            self.print_board()
-            self.reset_game()
-        elif self.round == self.max_rounds:
-            print("The game was a tie!")
-            self.reset_game()
-        else:
-            print(self.player, "has now taken their turn. The board now looks like:")
-            self.print_board()
+            winner = self.player
             self.player = 2 if self.player == 1 else 1    #switch the player
+            return winner
+        
+        #see if the game is a tie
+        elif self.round == self.max_rounds:
+            return 3
+        #continue playing
+        else:
+            self.player = 2 if self.player == 1 else 1    #switch the player
+        return 0
 
     def check_winner(self, row, col):
-        min_row = row - 3 if row-3 > 0 else 0 #up and down
+        # Setting the bounds for the search so it doesn't go out off the board
+
+        # Vertical bounds
+        min_row = row - 3 if row-3 > 0 else 0 
         max_row = row + 3 if row + 3 < self.height - 1 else self.height - 1
-        min_col = col - 3 if col-3 > 0 else 0 #left to right
+        # Horizontal bounds
+        min_col = col - 3 if col-3 > 0 else 0 
         max_col = col + 3 if col+3 < self.width - 1 else self.width-1
         return self.check_horizontal(row, min_col, max_col) or self.check_vertical(col, max_row, min_row) or self.check_diagonal(row, col, max_row, max_col)
 
     def check_horizontal(self, row, min_col, max_col):
         whole_row = self.board[row]
         curr = 0
-        print(row)
-        print(min_col, max_col)
         for i in range(min_col, max_col + 1):
             if whole_row[i] == self.player:
                 curr += 1
@@ -96,30 +96,4 @@ class Game:
         self.board = [[0 for _ in range(self.width)] for _ in range(self.height)]
         self.player = 1
         self.round = 1
-        self.availableSpots = [self.height - 1 for _ in range(self.width)]
-        print("The game has been reset. It is now Player 1's turn.")
-
-
-testGame = Game()
-#print(testGame.board[0])
-testGame.place_chip(0)
-testGame.place_chip(0)
-testGame.place_chip(6)
-testGame.place_chip(0)
-testGame.place_chip(0)
-testGame.place_chip(0)
-testGame.place_chip(1)
-testGame.place_chip(2)
-testGame.place_chip(1)
-testGame.place_chip(2)
-testGame.place_chip(2)
-testGame.place_chip(3)
-testGame.place_chip(3)
-testGame.place_chip(4)
-testGame.place_chip(3)
-testGame.place_chip(6)
-testGame.place_chip(1)
-testGame.place_chip(2)
-testGame.place_chip(1)
-testGame.place_chip(2)
-testGame.place_chip(1)
+        self.availableSpots = [self.height - 1 for _ in range(self.width)] #the row that the next chip will be placed in
